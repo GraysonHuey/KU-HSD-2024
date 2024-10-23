@@ -179,6 +179,5 @@ def main() -> None:
     root.mainloop()  # Start the Tkinter event loop
 
 
-# Entry point for the program
 if __name__ == '__main__':
     main()
