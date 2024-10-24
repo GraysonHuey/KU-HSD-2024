@@ -1,8 +1,11 @@
 from tkinter import Label, Button, Tk, filedialog, messagebox
-from tkinter.ttk import Combobox, Style
+from tkinter.ttk import Combobox
 from matplotlib import pyplot as plt
 from statistics import mean
 from typing import List, Dict
+
+# ******IF QUERYING A SINGLE VALUE, YOU CAN PUT ANYTHING IN FOR THE END DATE, BUT THERE MUST BE******
+# ******SOME VALUE THERE. YOU WILL NOT RECIEVE RESULTS IF THERE IS NOTHING IN THE BOX.*******
 
 # Sample Weather Data
 ###############################################################################
@@ -17,6 +20,7 @@ from typing import List, Dict
 
 global weatherData
 global resultEntry
+global resultEntry2
 global root
 
 
@@ -35,9 +39,10 @@ def loadData() -> Dict[str, List[float]]:
                 # Converts the values into floats and adds them to the dictionary
                 data[dataPoint.rstrip(":")] = [float(value) for value in values]
 
-        # print(f"\x1b[1;30;44m{data}")  # Debug print to view loaded data
+        ##print(f"\x1b[1;30;44m{data}")  # Debug print to view loaded data
     except FileNotFoundError:
         messagebox.showerror("Error", "File not found")
+    histogram(data)
     return data
 
 
@@ -86,7 +91,7 @@ def histogram(data: Dict[str, List[float]]) -> None:
     plt.show()  # Display the histograms
 
 
-def runQuery(queryType: str, dataPoint: str, start: int, end: int) -> None:
+def runQuery(queryType: str, dataPoint: str, start: int, end: int, type: str | None = None) -> int | None:
     global root
     global resultEntry
 
@@ -103,19 +108,31 @@ def runQuery(queryType: str, dataPoint: str, start: int, end: int) -> None:
             result = mean(weatherData[dataPoint][start:end + 1])
         case "single":
             result = weatherData[dataPoint][start]
+    
+    if type == "compare":
+        return result
 
     # Display the result in the resultEntry label
     resultEntry.config(text=f"Result: {result}", font=("Arial", 14, "bold"), fg="blue")
 
 
+def compare(value1: int, value2: int) -> None:
+    global resultEntry2
+    if value1 > value2:
+        resultEntry2.config(text=f"Result: Data value 1 is greater than data value 2", font=("Arial", 14, "bold"), fg="blue")
+    else:
+        resultEntry2.config(text=f"Result: Data value 2 is greater than data value 1", font=("Arial", 14, "bold"), fg="blue")
+
+
 def setupGUI() -> None:
     global weatherData
     global resultEntry
+    global resultEntry2
 
     root.configure(bg="#b6faee")  # Set background color of the main window
 
     # Button to load new weather data
-    dataButton = Button(root, text="Load New Data", highlightbackground="blue", command=loadData, font=("Arial", 12))
+    dataButton = Button(root, text="Load New Data", command=loadData, font=("Arial", 12, "bold"))
     dataButton.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
 
     # Dropdown for selecting the type of query (max, min, average, or single)
@@ -150,8 +167,9 @@ def setupGUI() -> None:
 
     # Button to run the query based on user input
     queryButton = Button(root, text="Run Query", font=("Arial", 12, "bold"),
-                         command=lambda: runQuery(queryTypeEntry.get(), dataPointEntry.get(),
-                                                  int(startEntry.get()), int(endEntry.get())))
+                        command=lambda: runQuery(queryTypeEntry.get(), dataPointEntry.get(),
+                                                int(startEntry.get()), int(endEntry.get())))
+
     queryButton.grid(row=5, column=0, columnspan=2, padx=10, pady=10)
 
     # Label to display the results of the query
@@ -163,6 +181,75 @@ def setupGUI() -> None:
                         borderwidth=2, relief="solid", width=40)
     resultEntry.grid(row=6, column=1, padx=10, pady=10)
 
+    typeLabel1 = Label(root, text="Query type 1:", font=("Arial", 12, "bold"), bg="#b6faee")
+    typeLabel1.grid(row=7, column=0, padx=10, pady=10)
+
+    typeEntry1 = Combobox(root, values=["max", "min", "average", "single"], width=25, font=("Arial", 12))
+    typeEntry1.grid(row=7, column=1, padx=10, pady=10)
+
+    dataPointLabel1 = Label(root, text="Data Point:", font=("Arial", 12, "bold"), bg="#b6faee")
+    dataPointLabel1.grid(row=8, column=0, padx=10, pady=10)
+
+    dataPointEntry1 = Combobox(root, values=["Weather Code", "Temperature Max", "Temperature Min", "Precipitation Sum",
+                                            "Wind Speed Max", "Precipitation Probability Max"], width=25,
+                              font=("Arial", 12))
+    dataPointEntry1.grid(row=8, column=1, padx=10, pady=10)
+
+    startLabel1 = Label(root, text="Start Date:", font=("Arial", 12, "bold"), bg="#b6faee")
+    startLabel1.grid(row=9, column=0, padx=10, pady=10)
+
+    startEntry1 = Combobox(root, values=list(range(len(weatherData["dates"]) - 1)), width=25, font=("Arial", 12))
+    startEntry1.grid(row=9, column=1, padx=10, pady=10)
+
+    # Dropdown for selecting the end date index for the query
+    endLabel1 = Label(root, text="End Date:", font=("Arial", 12, "bold"), bg="#b6faee")
+    endLabel1.grid(row=10, column=0, padx=10, pady=10)
+
+    endEntry1 = Combobox(root, values=list(range(len(weatherData["dates"]) - 1)), width=25, font=("Arial", 12))
+    endEntry1.grid(row=10, column=1, padx=10, pady=10)
+
+    typeLabel2 = Label(root, text="Query type 2:", font=("Arial", 12, "bold"), bg="#b6faee")
+    typeLabel2.grid(row=7, column=3, padx=10, pady=10)
+
+    typeEntry2 = Combobox(root, values=["max", "min", "average", "single"], width=25, font=("Arial", 12))
+    typeEntry2.grid(row=7, column=4, padx=10, pady=10)
+
+    dataPointLabel2 = Label(root, text="Data Point:", font=("Arial", 12, "bold"), bg="#b6faee")
+    dataPointLabel2.grid(row=8, column=3, padx=10, pady=10)
+
+    dataPointEntry2 = Combobox(root, values=["Weather Code", "Temperature Max", "Temperature Min", "Precipitation Sum",
+                                            "Wind Speed Max", "Precipitation Probability Max"], width=25,
+                              font=("Arial", 12))
+    dataPointEntry2.grid(row=8, column=4, padx=10, pady=10)
+
+    startLabel2 = Label(root, text="Start Date:", font=("Arial", 12, "bold"), bg="#b6faee")
+    startLabel2.grid(row=9, column=3, padx=10, pady=10)
+
+    startEntry2 = Combobox(root, values=list(range(len(weatherData["dates"]) - 1)), width=25, font=("Arial", 12))
+    startEntry2.grid(row=9, column=4, padx=10, pady=10)
+
+    # Dropdown for selecting the end date index for the query
+    endLabel2 = Label(root, text="End Date:", font=("Arial", 12, "bold"), bg="#b6faee")
+    endLabel2.grid(row=10, column=3, padx=10, pady=10)
+
+    endEntry2 = Combobox(root, values=list(range(len(weatherData["dates"]) - 1)), width=25, font=("Arial", 12))
+    endEntry2.grid(row=10, column=4, padx=10, pady=10)
+
+    compareButton = Button(root, text="Compare Values", font=("Arial", 12, "bold"), command=lambda: compare(runQuery(typeEntry1.get(), dataPointEntry1.get(),
+                                                int(startEntry1.get()), int(endEntry1.get()), type="compare"), runQuery(typeEntry2.get(), dataPointEntry2.get(),
+                                                int(startEntry2.get()), int(endEntry2.get()), type="compare")))
+    compareButton.grid(row=11, column=0, columnspan=2, padx=10, pady=10)
+
+
+    resultLabel = Label(root, text="Results:", font=("Arial", 12, "bold"), bg="#b6faee")
+    resultLabel.grid(row=12, column=0, padx=10, pady=10)
+
+
+    resultEntry2 = Label(root, text="Results will be displayed here", font=("Arial", 12, "italic"), bg="#ffffff",
+                        borderwidth=2, relief="solid", width=40)
+    resultEntry2.grid(row=12, column=1, padx=10, pady=10)
+
+
 
 def main() -> None:
     global weatherData
@@ -170,10 +257,9 @@ def main() -> None:
 
     root = Tk()
     root.title("Weather Data Viewer")
-    root.geometry("800x600")
+    root.geometry("1200x1000")
 
     weatherData = loadData()
-    histogram(weatherData)
     setupGUI()
 
     root.mainloop()  # Start the Tkinter event loop
